@@ -1,0 +1,14 @@
+#!/bin/bash
+#这=是输入一个数字作为成绩，并根据系统判定等级
+echo "pless input your score:$score" score
+read score
+if [ $score -ge 90];then
+echo "优秀"
+elif [ $score -ge 70];then
+echo "良好"
+elif [ $score -ge 60];then
+echo "及格"
+else
+echo "继续努力"
+fi
+#在虚拟机中无法打出汉字 so this is not define
