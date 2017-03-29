@@ -1,0 +1,19 @@
+#shell语言中循环加判断的写法和注意事项
+#功能说明：再循环中遇特定条件，跳出本次循环
+
+#!/bin/bash
+num=5
+for i in {1..10}
+do
+    if [ $i -eq $num ]
+    then
+        continue
+    else
+        echo $i
+    fi
+done
+
+#结果为1234678910
+#注意事项：1.if 后面最好跟上一个空格
+#         2.[]中的内容前后 比较字符中也有空格
+#         3if语法为 if[] then else fi
