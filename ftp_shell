@@ -1,0 +1,50 @@
+#!/bin/sh
+#FileName:ftpget.sh     
+#Function:从ftp服务器上下载一个文件到本地计算机上      
+#Version:V0.1        
+#Author:Sunrier        
+#Date:2012-07-20  
+      
+#$#表示传递给此Shell脚本的参数个数  
+#-ne表示不等于  
+if [ $# -ne 2  ]   
+then  
+    echo "Usage $0  <remote_dir/filename> <local_dir>"   
+    exit 1  
+fi    
+  
+#IP表示ftp的服务器ip地址  
+IP=172.30.35.5    
+#IP=192.168.6.1  
+  
+#FULLNAME获取从ftp服务器上下载的文件全路径名  
+FULLNAME=$1  
+  
+#DESTDIR获取从ftp服务器上下载的文件所存放的本地计算机的目录路径  
+DESTDIR=$2  
+  
+#remote_filename获取从ftp服务器上下载的文件名  
+remote_filename=`basename $FULLNAME`  
+  
+#DESTFILE表示下载文件所存放的本地路径,以及本地保存后的文件名  
+DESTFILE=$DESTDIR/$remote_filename   
+#FTPIT 这只是一个标志 user 后跟着的是用户名和密码 意思就是发送这个登陆名与密码给远程文件
+#quit 退出本次远程连接
+#-n 表示不自动登陆
+#ftp -i -n $IP <<FTPIT  
+ftp -i -n 
+<<
+FTPIT
+open $IP  
+user Sunrier redhat  
+bin  
+cd /home/remote/log/ftpfile  
+get $FULLNAME $DESTFILE  
+quit  
+FTPIT 
+  
+exit 0  
+  
+#get remote_file [ local_file ]  
+#remote_file是指定要复制的文件,local_file是指定本地计算机上的文件名,  
+#local_file为可选项,没有指定的话则跟remote_file同名。
