@@ -1,0 +1,411 @@
+#!/bin/sh
+#####################################################
+#这里是远程连接ftp并下载文件到本地    
+#Function:从ftp服务器上下载文件到本地计算机上并解析后倒入对应数据库表          
+#'$#'表示传递给此Shell脚本的参数个数  
+#-ne表示不等于
+#time是系统单前日期 
+time=`date +%Y%m%d`
+begintime=`date +%Y年%m月%d日%H时%M分%S秒`
+set encoding=utf-8 fileencodings=ucs-bom,utf-8,cp936  
+#设置字符编码    
+#创建记录文件ftpdown.txt
+touch ftpdown.txt
+echo $begintime+"数据下载导入记录" >> ftpdown.txt
+echo "========================================================================================" >> ftpdown.txt
+#ftp的务器相关  
+ftp_ip='10.101.58.15'
+ftpusername='rxc_ftp'
+ftppassword='ZGXT_rxc_ftp!1'
+####下载的文件有效期处理，暂时保留7天
+deltime=`date +"%Y%m%d" -d "-7 days"`
+rm -f DATA#527683#ROUTE#${deltime}#0#1.txt
+rm -f POWER#527683#DHCELLECTOR#${deltime}#0#1.txt
+rm -f POWER#527683#JTGENERAL_AIR#${deltime}#0#1.txt
+rm -f SPACE#527683#EQUIPROOM#${deltime}#0#1.txt
+rm -f SPACE#527683#RESPOINT#${deltime}#0#1.txt
+rm -f SPACE#527683#SITE#${deltime}#0#1.txt
+rm -f TOWER_DATA#527683#TOWER_ROOM_NEW#${deltime}#0#1.txt
+rm -f TOWER_DATA#527683#TOWER_SITE_NEW#${deltime}#0#1.txt
+rm -f TRAN#527683#OLT#${deltime}#0#1.txt
+rm -f WIRE#527683#LTE_RRU#${deltime}#0#1.txt
+rm -f WIRE#527683#NODEB#${deltime}#0#1.txt
+rm -f WIRE#527683#BTS#${deltime}#0#1.txt
+rm -f TRAN#527683#TRANS_NE#${deltime}#0#1.txt
+rm -f WIRE#527683#E_NODEB#${deltime}#0#1.txt
+#需要从ftp服务器上下载的各个文件，其中文件名要根据时间来得到最新的  
+ROUTE="DATA#527683#ROUTE#${time}#0#1.txt"
+DHCELLECTOR="POWER#527683#DHCELLECTOR#${time}#0#1.txt"
+POWER_JTGENERAL_AIR="POWER#527683#JTGENERAL_AIR#${time}#0#1.txt"
+EQUIPROOM="SPACE#527683#EQUIPROOM#${time}#0#1.txt"
+RESPOINT="SPACE#527683#RESPOINT#${time}#0#1.txt"
+SITE="SPACE#527683#SITE#${time}#0#1.txt"
+TOWER_ROOM_NEW="TOWER_DATA#527683#TOWER_ROOM_NEW#${time}#0#1.txt"
+TOWER_SITE_NEW="TOWER_DATA#527683#TOWER_SITE_NEW#${time}#0#1.txt"
+OLT="TRAN#527683#OLT#${time}#0#1.txt"
+LTE_RRU="WIRE#527683#LTE_RRU#${time}#0#1.txt"
+NODEB="WIRE#527683#NODEB#${time}#0#1.txt"
+BTS="WIRE#527683#BTS#${time}#0#1.txt"
+TRANS_NE="TRAN#527683#TRANS_NE#${time}#0#1.txt"
+E_NODEB="WIRE#527683#E_NODEB#${time}#0#1.txt"
+#####################################################
+BTSMODEL="DICT#527683#BTSMODEL#${time}#0#1.txt" 
+BTSVENDOR="DICT#527683#BTSVENDOR#${time}#0#1.txt"
+CITY="SPACE#527683#CITY#${time}#0#1.txt"
+COUNTY="SPACE#527683#COUNTY#${time}#0#1.txt"
+PROVINCE="SPACE#527683#PROVINCE#${time}#0#1.txt"
+TOWER_TOWER_NEW="TOWER_DATA#527683#TOWER_TOWER_NEW#${time}#0#1.txt"
+TOWER_SW_NEW="TOWER_DATA#527683#TOWER_SW_NEW#${time}#0#1.txt"
+BSC="WIRE#527683#BSC#${time}#0#1.txt"
+RNC="WIRE#527683#RNC#${time}#0#1.txt" 
+#FTPIT 这只是一个标志 user 后跟着的是用户名和密码 意思就是发送这个登陆名与密码给远程文件
+#cd 是ftp的目录结构
+#quit 退出本次远程连接
+#-n 表示不自动登陆
+dtime=`date +%Y%m%d%H%M%S`
+echo "远程下载启动时间:"$dtime >> ftpdown.txt
+ftp -i -n $IP <<FTPIT  
+ftp -v -i -n <<FTPIT
+open $ftp_ip
+user $ftpusername $ftppassword
+binary
+#单个文件下载 
+hash
+get $ROUTE
+get $DHCELLECTOR
+get $POWER_JTGENERAL_AIR
+get $EQUIPROOM
+get $RESPOINT
+get $SITE
+get $TOWER_ROOM_NEW
+get $TOWER_SITE_NEW
+get $OLT
+get $LTE_RRU
+get $NODEB
+get $BTS
+get $TRANS_NE
+get $E_NODEB
+quit
+FTPIT
+echo "远程下载结束时间:" $dtime >> ftpdown.txt
+#get $NO1 [ NO2 ]  
+#NO1是指定要复制的文件,NO2是指定本地计算机上的文件名,
+#get是单个下载 mget多个下载
+#NO2为可选项,没有指定的话则跟NO1同名。
+#exit 0 要退出当前shell
+#####################################################
+
+#####################################################
+#数据库共有信息开始
+#连接远程数据库需要端口号，本地不需要
+#HOSTNAME 连接地址 
+#PORT 端口号
+#DBUSER 用户名  
+#DBPASSWORD 密码
+#DATANAME数据库名
+#T_NAME 表名
+HOSTNAME='10.102.45.39'
+PORT=3306
+DBUSER='root'
+DBPASSWORD='YDJHtest'
+DATANAME="ydjh_site"
+#数据库共有信息结束
+
+###############################################################################
+#数据文件对应到某一表
+#说明：远程有密码为mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME}
+#本地无密码 mysql -h${HOSTNAME} -u${DBUSER} ${DATANAME}
+####ROUTE
+var=$ROUTE
+#执行开始时间s
+begintime=`date +%Y%m%d%H%M%S` 
+echo "表导入启动时间："$begintime >> ftpdown.txt
+echo "ROUTE数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_data_route;
+LOAD DATA local INFILE '$var' ignore INTO table zg_data_route  fields terminated by'|';
+select count(*) as SUM from zg_data_route
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "ROUTE表导入结束时间:"$endtime >> ftpdown.txt
+#一张表的对应结束
+#分开是记录每次导入的时间
+
+###############################################################################
+####DHCELLECTOR
+var=$DHCELLECTOR
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "动环表数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >> ftpdown.txt
+Truncate Table zg_power_dhcellector ;
+LOAD DATA local INFILE '$var' ignore INTO table zg_power_dhcellector  fields terminated by'|';
+select count(1) as SUM from zg_power_dhcellector 
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "动环表数据导入结束时间:"$endtime >> ftpdown.txt
+######################################################################################
+####POWER_JTGENERAL_AIR
+var=$POWER_JTGENERAL_AIR
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "空调设备数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/\\/s/\\/\\\\/g' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >> ftpdown.txt
+Truncate Table zg_power_jtgeneral_air;
+#LOAD DATA local INFILE '$var' ignore INTO table zg_power_jtgeneral_air  fields terminated by'|';
+load DATA local INFILE '$var' into table zg_power_jtgeneral_air 
+APPEND
+fields terminated by'.'
+(
+INT_ID,
+CITY_ID,
+COUNTY_ID,
+JT_SOURCE_NE,
+ZH_LABEL,
+RELATED_EQUIPROOM,
+MODEL,
+VENDOR,
+STATUS
+);
+select count(*) as SUM from zg_power_jtgeneral_air  
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "空调设备数据导入结束时间:"$endtime >> ftpdown.txt
+#####################################################
+####EQUIPROOM
+var=$EQUIPROOM
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "机房数据导入开始时间："$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/\\/s/\\/\\\\/g' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >> ftpdown.txt
+Truncate Table zg_space_equip_room;
+LOAD DATA local INFILE '$var' ignore INTO table zg_space_equip_room  fields terminated by'|';
+select count(1) as SUM from zg_space_equip_room  
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "机房数据导入结束时间:"$endtime >> ftpdown.txt
+##################################################################
+####RESPOINT
+var=$RESPOINT
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "资源点数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/\\/s/\\/\\\\/g' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >> ftpdown.txt
+Truncate Table zg_space_res_point;
+LOAD DATA local INFILE '$var' ignore INTO table zg_space_res_point  fields terminated by'|';
+select count(1) as SUM from zg_space_res_point 
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "资源点数据导入结束时间:"$endtime >> ftpdown.txt
+######################################################################
+####SITE
+var=$SITE
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "站点数据导入开始时间:"$begintime>>ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >> ftpdown.txt
+Truncate Table zg_space_site;
+LOAD DATA local INFILE '$var' ignore INTO table zg_space_site  fields terminated by'|';
+select count(1) as SUM from zg_space_site  
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "站点数据导入结束时间:"$endtime >> ftpdown.txt
+#############################################################################
+####TOWER_ROOM_NEW
+var=$TOWER_ROOM_NEW
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "Tower_room数据导入开始时间:"$begintime >>ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >> ftpdown.txt
+Truncate Table zg_tower_room;
+LOAD DATA local INFILE '$var' ignore INTO table zg_tower_room  fields terminated by'|';
+select count(1) as SUM from zg_tower_room  
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "Tower_room数据导入结束时间:"$endtime>>ftpdown.txt
+##############################################################################
+####tran_trans_ne
+var=$TRANS_NE
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "TRAN_TRANS_NE数据导入开始时间:"$begintime >>ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_tran_trans_ne;
+LOAD DATA local INFILE '$var' ignore INTO table zg_tran_trans_ne  fields terminated by'|';
+select count(1) as SUM from zg_tran_trans_ne 
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "tran_trans_ne数据导入结束时间:" $endtime >> ftpdown.txt
+##############################################################################
+####TOWER_SITE_NEW
+var=$TOWER_SITE_NEW
+begintime=`date +%Y%m%d%H%M%S` 
+echo "TOWER_SITE_NEW数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_tower_site;
+LOAD DATA local INFILE '$var' ignore INTO table zg_tower_site  fields terminated by'|';
+select count(1) as SUM from zg_tower_site 
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "TOWER_SITE_NEW数据导入结束时间:"$endtime >> ftpdown.txt
+#################################################################################
+####OLT
+var=$OLT
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "OLT数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_tran_olt;
+LOAD DATA local INFILE '$var' ignore INTO table zg_tran_olt  fields terminated by'|';
+select count(1) as SUM from zg_tran_olt  
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "OLT数据导入结束时间:"$endtime >> ftpdown.txt
+##################################################################################
+####LTE_RRU
+var=$LTE_RRU
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "LTE_RRU数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/\\/s/\\/\\\\/g' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_wire_lte_rru;
+LOAD DATA local INFILE '$var' ignore INTO table zg_wire_lte_rru  fields terminated by'|';
+select count(1) as SUM from zg_wire_lte_rru  
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "LTE_RRU数据导入结束时间:"$endtime >> ftpdown.txt
+#################################################################################
+####NODEB
+var=$NODEB
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "nodeb数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_wire_nodeb;
+LOAD DATA local INFILE '$var' ignore INTO table zg_wire_nodeb  fields terminated by'|';
+select count(1) as SUM from zg_wire_nodeb
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "nodeb数据导入结束时间:"$endtime>>ftpdown.txt
+####################################################################################
+####BTS
+var=$BTS
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "BTS数据导入开始时间:"$begintime >> ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/\\/s/\\/\\\\/g' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_wire_bts;
+LOAD DATA local INFILE '$var' ignore INTO table zg_wire_bts fields terminated by'|';
+select count(1) as SUM from zg_wire_bts
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S` 
+echo "BTS数据导入结束时间:"$endtime >>ftpdown.txt
+#####################################################################################
+####E_NODEB
+var=$E_NODEB
+#执行开始时间
+begintime=`date +%Y%m%d%H%M%S` 
+echo "e_nodeb3G基站数据导入开始时间:"$begintime>>ftpdown.txt
+#设定匹配格式
+sed -i '1d' $var
+sed -i '/\\/s/\\/\\\\/g' $var
+sed -i '/[[:space:]][[:space:]]/s/[[:space:]][[:space:]]/|null|/g' $var
+sed -i '/[[:space:]]/s/[[:space:]]/|/g' $var
+sed -i '/null/s/null//g' $var
+mysql -h${HOSTNAME} -P${PORT} -u${DBUSER} -p${DBPASSWORD} ${DATANAME} <<EOF >>ftpdown.txt
+Truncate Table zg_wire_e_nodeb;
+LOAD DATA local INFILE '$var' ignore INTO table zg_wire_e_nodeb  fields terminated by'|';
+select count(1) as SUM from zg_wire_e_nodeb
+EOF
+#本表结束时间
+endtime=`date +%Y%m%d%H%M%S`
+echo "e_nodeb3G基站数据导入结束时间:"$endtime >> ftpdown.txt
+echo "表导入完成时间："$endtime >> ftpdown.txt
+#####################################################
+echo "============================================本次记录结束==========================================" >> ftpdown.txt
+exit 0
+#退出本次脚本
+#####################################################
